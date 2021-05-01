@@ -40,7 +40,8 @@ class DWTPooling(L.Layer, Wavelet):
 
         self.filters = [self.build_kernel(f) for f in filters]
 
-        padding = self.ndim * ([self.p, self.p],)
+        o = 1 if self.p % 2 or self.p <= 2 else 2
+        padding = self.ndim * ([self.p-1, self.p-o],)
         self.padding = tf.constant([[0, 0], [0, 0], *padding])
 
         if self.ndim == 1:
@@ -59,10 +60,10 @@ class DWTPooling(L.Layer, Wavelet):
 
     def compute_output_shape(self, x):
         if self.data_format == 'channels_first':
-            inner = [np.ceil(np.ceil(d/self.strides) for d in x[2:])]
+            inner = [d//self.strides for d in x[2:]]
             return len(self.filters) * (x[0], x[1], *inner)
 
-        inner = [np.ceil(np.ceil(d/self.strides) for d in x[1:-1])]
+        inner = [d//self.strides for d in x[2:]]
         return len(self.filters) * (x[0], *inner, x[-1])
 
     def conv(self, x, kernel):
@@ -76,18 +77,13 @@ class DWTPooling(L.Layer, Wavelet):
         x = K.expand_dims(x, axis=-1)
         x = L.TimeDistributed(
             L.Lambda(lambda x: tf.nn.convolution(
-                x, kernel, padding="SAME", data_format=self.conv_format))
+                x, kernel,
+                padding="VALID",
+                strides=self.strides,
+                data_format=self.conv_format,
+            ))
         )(x)
         x = K.squeeze(x, axis=-1)
-
-        if self.ndim == 1:
-            x = x[:, :, self.p:-self.p:self.strides]
-        elif self.ndim == 2:
-            x = x[:, :, self.p:-self.p:self.strides,
-                  self.p:-self.p:self.strides]
-        elif self.ndim == 3:
-            x = x[:, :, self.p:-self.p:self.strides, self.p:-
-                  self.p:self.strides, self.p:-self.p:self.strides]
 
         if self.data_format == 'channels_last':
             x = K.permute_dimensions(x, (0, *range(2, self.ndim+2), 1))
