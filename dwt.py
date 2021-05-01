@@ -29,19 +29,10 @@ class DWTPooling(L.Layer, Wavelet):
         self.data_format = conv_utils.normalize_data_format(data_format)
 
         self.ndim = ndim
-        self.mag = np.power(2, self.ndim * self.level / 2)
+        self.filters = self.build_filters(ndim, self.dec_lo, self.dec_hi)
 
-        filters = [self.dec_lo, self.dec_hi]
-        for _ in range(1, ndim):
-            dec_lo = [self.kron(f, self.dec_lo) for f in filters]
-            dec_hi = [self.kron(f, self.dec_hi) for f in filters]
-
-            filters = [f for pair in [dec_lo, dec_hi] for f in pair]
-
-        self.filters = [self.build_kernel(f) for f in filters]
-
-        o = 1 if self.p % 2 or self.p <= 2 else 2
-        padding = self.ndim * ([self.p-1, self.p-o],)
+        offset = 1 if self.p % 2 or self.p <= 2 else 2
+        padding = self.ndim * ([self.p-1, self.p-offset],)
         self.padding = tf.constant([[0, 0], [0, 0], *padding])
 
         if self.ndim == 1:
@@ -50,10 +41,6 @@ class DWTPooling(L.Layer, Wavelet):
             self.conv_format = "NHWC"
         elif self.ndim == 3:
             self.conv_format = "NDHWC"
-
-    def kron(self, kernel, filter):
-        sh = (*kernel.shape, len(filter))
-        return np.kron(kernel, filter).reshape(sh)
 
     def call(self, x):
         return [self.conv(x, f) for f in self.filters]
@@ -89,10 +76,6 @@ class DWTPooling(L.Layer, Wavelet):
             x = K.permute_dimensions(x, (0, *range(2, self.ndim+2), 1))
 
         return x
-
-    def build_kernel(self, kernel):
-        kernel = np.reshape(kernel, (*kernel.shape, 1, 1)) / self.mag
-        return tf.convert_to_tensor(kernel, dtype=self.dtype)
 
 
 class DWTPooling1D(DWTPooling):
