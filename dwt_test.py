@@ -51,32 +51,40 @@ def test_pooling_1d_orthogonal(wave, length):
 
 
 @pytest.mark.dim2
-@pytest.mark.parametrize("wave,length", it.product(
-    random.sample([x for x in wavelets if x.dec_len < 20], 5), (63, 64, 65)
+@pytest.mark.parametrize("wave,length,channels", it.product(
+    random.sample([x for x in wavelets if x.dec_len < 20], 5),
+    (63, 64, 65), ("first", "last"),
 ))
-def test_pooling_2d_orthogonal(wave, length):
+def test_pooling_2d_orthogonal(wave, length, channels):
     print(wave)
 
-    signal = np.random.random((3, length, length, 5))
+    if channels == "last":
+        signal = np.random.random((3, length, length, 5))
+
+        pwt_out = pywt.dwt2(signal, wave, axes=(1, 2))
+        pwt_out = (pwt_out[0], *pwt_out[1])
+        pwt_out = [p[:, :length//2, :length//2, :] for p in pwt_out]
+    else:
+        signal = np.random.random((3, 5, length, length))
+
+        pwt_out = pywt.dwt2(signal, wave, axes=(2, 3))
+        pwt_out = (pwt_out[0], *pwt_out[1])
+        pwt_out = [p[:, :, :length//2, :length//2] for p in pwt_out]
 
     # Build a simple model
     inp = L.Input(signal.shape[1:])
-    x = D.DWTPooling2D(wave)(inp)
+    x = D.DWTPooling2D(wave, data_format="channels_"+channels)(inp)
     dwt = M.Model(inp, x)
     dwt.summary()
 
     dwt_out = dwt(signal)
-    pwt_out = pywt.dwt2(signal, wave, axes=(1, 2))
-    pwt_out = (pwt_out[0], *pwt_out[1])
 
     for (d_out, p_out) in zip(dwt_out, pwt_out):
-        print(d_out[0, :10, 0, 0])
-        print(p_out[0, :10, 0, 0])
+        print(d_out[0, 0, :10, 0])
+        print(p_out[0, 0, :10, 0])
 
-        assert d_out.shape == (3, length//2, length//2, 5)
-
+        assert d_out.shape == p_out.shape
         d_out = d_out.numpy()
-        p_out = p_out[:, :length//2, :length//2, :]
 
         # check approximate equality via mse
         assert np.square(d_out - p_out).mean() == pytest.approx(0)

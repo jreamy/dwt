@@ -50,7 +50,7 @@ class DWTPooling(L.Layer, Wavelet):
             inner = [d//self.strides for d in x[2:]]
             return len(self.filters) * (x[0], x[1], *inner)
 
-        inner = [d//self.strides for d in x[2:]]
+        inner = [d//self.strides for d in x[1:-1]]
         return len(self.filters) * (x[0], *inner, x[-1])
 
     def conv(self, x, kernel):
