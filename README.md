@@ -1,17 +1,6 @@
 # Keras Discrete Wavelet Transform Implementations
 
-This project is still in its infancy, but I want to make the discrete wavelet transform accessible in keras machine learning projects. I'm a lone developer right now, and cannot commit to regular releases or implementing all wavelet functions. I intend to build out more features, examples, and tests. I'll also create actual documentation soon, standardize names, and generally make the code less hacky...
-
-## Wavelets
-
-Currently only the orthogonal wavelets work, but I plan on adding support for the biorthogonal wavelets.
-
-Working wavelets include:
- - Haar (haar)
- - Coiflets (coif1-coif17)
- - Daubechies (db1-db38)
- - Symlets (sym2-sym20)
- - Discrete Meyer (dmey)
+This project is still in its infancy, but I want to make the discrete wavelet transform accessible in keras machine learning projects. I'm a lone developer right now, and cannot commit to regular releases or implementing all wavelet functions. I intend to build out more features, examples, and tests.
 
 ## Examples
 
@@ -46,6 +35,25 @@ Non-trainable params: 0
 __________________________________________________________________________________________________
 
 ```
+
+## Wavelets
+
+Currently only the orthogonal wavelets work, but I plan on adding support for the biorthogonal wavelets.
+
+Working wavelets include:
+ - Haar (haar)
+ - Coiflets (coif1-coif17)
+ - Daubechies (db1-db38)
+ - Symlets (sym2-sym20)
+ - Discrete Meyer (dmey)
+
+## Roadmap
+ - Refactor and rename to be more similar to tensorflow layers
+ - Organize repo / module more effectively
+ - Add documentatation
+ - Add more unit tests
+ - Support the other pywt wavelet families
+
 
 ## Dependencies
  - tensorflow
