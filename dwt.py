@@ -26,21 +26,17 @@ class DWTPooling(L.Layer, Wavelet):
 
         self.strides = strides
         self.mode = mode
-        self.data_format = conv_utils.normalize_data_format(data_format)
-
         self.ndim = ndim
+
+        self.data_format = conv_utils.normalize_data_format(data_format)
+        self.conv_format = conv_utils.convert_data_format(
+            "channels_last", self.ndim+2)
+
         self.filters = self.build_filters(ndim, self.dec_lo, self.dec_hi)
 
         offset = 1 if self.p % 2 or self.p <= 2 else 2
         padding = self.ndim * ([self.p-1, self.p-offset],)
         self.padding = tf.constant([[0, 0], [0, 0], *padding])
-
-        if self.ndim == 1:
-            self.conv_format = "NWC"
-        elif self.ndim == 2:
-            self.conv_format = "NHWC"
-        elif self.ndim == 3:
-            self.conv_format = "NDHWC"
 
     def call(self, x):
         return [self.conv(x, f) for f in self.filters]
