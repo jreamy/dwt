@@ -7,7 +7,7 @@ from tensorflow.keras import layers as L
 
 from tensorflow.python.keras.utils import conv_utils
 
-from wavelet import Wavelet
+from .wavelet import Wavelet
 
 
 class DWTPooling(L.Layer, Wavelet):

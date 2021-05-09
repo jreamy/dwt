@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 import pytest
 
-import wavelet as W
+from . import wavelet as W
 
 
 @pytest.mark.parametrize("wave,level", it.product(pywt.wavelist(kind="discrete"), (1, 5, 9)))

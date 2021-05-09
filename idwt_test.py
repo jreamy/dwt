@@ -9,10 +9,8 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import layers as L
 from tensorflow.keras import models as M
 
-from matplotlib import pyplot as plt
-
-import dwt as D
-import idwt as iD
+from . import pooling as D
+from . import upsampling as iD
 
 wavelets = [
     pywt.Wavelet(x) for x in pywt.wavelist(
