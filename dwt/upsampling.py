@@ -15,7 +15,7 @@ class DWTUpSampling(L.Layer, Wavelet):
         self,
         wavelet,
         level=1,
-        ndim=1,
+        rank=1,
         mode='symmetric',
         data_format=None,
         **kwargs
@@ -23,18 +23,21 @@ class DWTUpSampling(L.Layer, Wavelet):
         L.Layer.__init__(self, **kwargs)
         Wavelet.__init__(self, wavelet, level)
 
-        self.ndim = ndim
         self.mode = mode
+        self.rank = rank
+
         self.data_format = conv_utils.normalize_data_format(data_format)
-        self._channels_first = self.data_format == 'channels_first'
+        self._channels_first = self.data_format == "channels_first"
+
+        # All the convolutions will be permuted to channels last
         self.conv_format = conv_utils.convert_data_format(
-            "channels_last", self.ndim+2)
+            "channels_last", self.rank+2)
 
         self.filters = self.build_filters(
-            ndim, self.rec_lo[::-1], self.rec_hi[::-1])
+            self.rank, self.rec_lo[::-1], self.rec_hi[::-1])
 
         self.offset = 1 if self.p % 2 or self.p <= 2 else 2
-        padding = self.ndim * ([self.p//2, self.p//2],)
+        padding = self.rank * ([self.p//2, self.p//2],)
 
         if self._channels_first:
             self.padding = tf.constant([[0, 0], [0, 0], *padding])
@@ -52,7 +55,7 @@ class DWTUpSampling(L.Layer, Wavelet):
 
         input_shape = shapes.pop()
         idx = 2 if self._channels_first else 1
-        spatial_dims = input_shape[idx: idx+self.ndim]
+        spatial_dims = input_shape[idx: idx+self.rank]
 
         self.upsamplers = [self._build_upsampling(
             length) for length in spatial_dims]
@@ -70,8 +73,10 @@ class DWTUpSampling(L.Layer, Wavelet):
 
     def conv_transpose(self, x, kernel):
 
+        # Pad the ends of the input data
         x = tf.pad(x, self.padding, mode=self.mode)
 
+        # Insert zeros between alll elements
         axis = 2 if self._channels_first else 1
         for upsampler in self.upsamplers:
             x = tf.tensordot(x, upsampler, axes=(axis, 0))
@@ -86,16 +91,17 @@ class DWTUpSampling(L.Layer, Wavelet):
         )(x)
         x = K.squeeze(x, axis=-1)
 
+        # This is inelegant, but works for removing the first element if needed
         if self.offset % 2 == 0:
-            if self.ndim == 1:
+            if self.rank == 1:
                 x = x[:, :, 1:]
-            elif self.ndim == 2:
+            elif self.rank == 2:
                 x = x[:, :, 1:, 1:]
-            elif self.ndim == 3:
+            elif self.rank == 3:
                 x = x[:, :, 1:, 1:, 1:]
 
         if not self._channels_first:
-            x = K.permute_dimensions(x, (0, *range(2, self.ndim+2), 1))
+            x = K.permute_dimensions(x, (0, *range(2, self.rank+2), 1))
 
         return x
 
@@ -114,7 +120,7 @@ class DWTUpSampling1D(DWTUpSampling):
         super(DWTUpSampling1D, self).__init__(
             wavelet,
             level=level,
-            ndim=1,
+            rank=1,
             mode=mode,
             data_format=data_format,
             **kwargs
@@ -135,7 +141,7 @@ class DWTUpSampling2D(DWTUpSampling):
         super(DWTUpSampling2D, self).__init__(
             wavelet,
             level=level,
-            ndim=2,
+            rank=2,
             mode=mode,
             data_format=data_format,
             **kwargs
@@ -156,7 +162,7 @@ class DWTUpSampling3D(DWTUpSampling):
         super(DWTUpSampling3D, self).__init__(
             wavelet,
             level=level,
-            ndim=3,
+            rank=3,
             mode=mode,
             data_format=data_format,
             **kwargs
