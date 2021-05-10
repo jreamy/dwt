@@ -76,7 +76,7 @@ class DWTUpSampling(L.Layer, Wavelet):
         # Pad the ends of the input data
         x = tf.pad(x, self.padding, mode=self.mode)
 
-        # Insert zeros between alll elements
+        # Insert zeros between all elements
         axis = 2 if self._channels_first else 1
         for upsampler in self.upsamplers:
             x = tf.tensordot(x, upsampler, axes=(axis, 0))
