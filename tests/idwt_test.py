@@ -9,8 +9,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import layers as L
 from tensorflow.keras import models as M
 
-from . import pooling as D
-from . import upsampling as iD
+from .context import dwt
 
 wavelets = [
     pywt.Wavelet(x) for x in pywt.wavelist(
@@ -29,12 +28,12 @@ def test_pooling_1d_orthogonal(wave, length):
 
     # Build a simple model
     inp = L.Input(signal.shape[1:])
-    x = D.DWTPooling1D(wave)(inp)
-    x = iD.DWTUpSampling1D(wave)(x)
-    dwt = M.Model(inp, x)
-    dwt.summary()
+    x = dwt.DWTPooling1D(wave)(inp)
+    x = dwt.DWTUpSampling1D(wave)(x)
+    model = M.Model(inp, x)
+    model.summary()
 
-    d_out = dwt(signal)
+    d_out = model(signal)
 
     l_out = length - (length % 2)
     assert d_out.shape == (3, l_out, 5)
@@ -74,12 +73,12 @@ def test_pooling_2d_orthogonal(wave, length, channels):
 
     # Build a simple model
     inp = L.Input(signal.shape[1:])
-    x = D.DWTPooling2D(wave, data_format="channels_"+channels)(inp)
-    x = iD.DWTUpSampling2D(wave, data_format="channels_"+channels)(x)
-    dwt = M.Model(inp, x)
-    dwt.summary()
+    x = dwt.DWTPooling2D(wave, data_format="channels_"+channels)(inp)
+    x = dwt.DWTUpSampling2D(wave, data_format="channels_"+channels)(x)
+    model = M.Model(inp, x)
+    model.summary()
 
-    d_out = dwt(signal)
+    d_out = model(signal)
 
     l_out = length - (length % 2)
 
@@ -115,12 +114,12 @@ def test_pooling_3d_orthogonal(wave, length):
 
     # Build a simple model
     inp = L.Input(signal.shape[1:])
-    x = D.DWTPooling3D(wave)(inp)
-    x = iD.DWTUpSampling3D(wave)(x)
-    dwt = M.Model(inp, x)
-    dwt.summary()
+    x = dwt.DWTPooling3D(wave)(inp)
+    x = dwt.DWTUpSampling3D(wave)(x)
+    model = M.Model(inp, x)
+    model.summary()
 
-    d_out = dwt(signal)
+    d_out = model(signal)
 
     l_out = length - (length % 2)
     assert d_out.shape == (3, l_out, l_out, l_out, 5)

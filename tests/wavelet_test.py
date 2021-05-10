@@ -4,14 +4,14 @@ import numpy as np
 import itertools as it
 import pytest
 
-from . import wavelet as W
+from .context import dwt
 
 
 @pytest.mark.parametrize("wave,level", it.product(pywt.wavelist(kind="discrete"), (1, 5, 9)))
 def test_wavelet_filters(wave, level):
 
     # Get the custom and pywt wavelets
-    w = W.Wavelet(wave, level)
+    w = dwt.Wavelet(wave, level)
     p = pywt.Wavelet(wave).wavefun(level)
 
     # Get the custom and pywt filters

@@ -8,9 +8,12 @@ import tensorflow as tf
 class Wavelet:
 
     def __init__(self, wavelet, level=1):
-        self.wavelet = wavelet
-        if not isinstance(self.wavelet, pywt.Wavelet):
-            self.wavelet = pywt.Wavelet(self.wavelet)
+        if isinstance(wavelet, Wavelet):
+            self.wavelet = wavelet.wavelet
+        elif isinstance(wavelet, pywt.Wavelet):
+            self.wavelet = wavelet
+        else:
+            self.wavelet = pywt.Wavelet(wavelet)
 
         self.level = level
         self.p = self.wavelet.dec_len
