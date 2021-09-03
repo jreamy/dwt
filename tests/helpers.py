@@ -2,13 +2,13 @@
 import os
 import random
 import unittest
-from argparse import ArgumentParser
-
-from contextlib import redirect_stdout
-from io import StringIO
 
 import pywt
+import tensorflow as tf
+tf.keras.backend.set_floatx('float64')
 
+
+# Environment variables used to specify test setup
 run_short = bool(os.environ.get("SHORT"))
 
 
@@ -36,3 +36,9 @@ def fill_similar(data, length):
     mn, mx = min(data), max(data)
 
     return data + [random.randint(mn, mx) for _ in range(length-len(data))]
+
+
+def show_data(data):
+    data = tuple(data)
+    fmt = " ".join(["%0.5f"] * len(data))
+    print(fmt % data)
